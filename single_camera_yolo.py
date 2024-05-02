@@ -116,13 +116,13 @@ if __name__ == "__main__":
     args = parser_for_model().parse_args()
     
     if args.mode == 'Original':
-        model = YOLO("Original/yolov8n.pt",  task='detect')
+        model = YOLO("Original/yolov8n_traffic.pt",  task='detect')
     
     elif args.mode == 'TensorRT-FP16':
         file_path=("FP16")
         file_list=os.listdir(file_path)
         if not any(file.endswith('.engine') for file in file_list):
-            tgtmodel = YOLO("FP16/yolov8n.pt")
+            tgtmodel = YOLO("FP16/yolov8n_traffic.pt")
             print("Building TensorRT-FP16 Model of YOLOv8\n")
             tgtmodel.export(format='engine', device=0, half=True)
             print("Building Complete\n")
@@ -132,7 +132,7 @@ if __name__ == "__main__":
         file_path=("FP32")
         file_list=os.listdir(file_path)
         if not any(file.endswith('.engine') for file in file_list):
-            tgtmodel = YOLO("FP32/yolov8n.pt")
+            tgtmodel = YOLO("FP32/yolov8n_traffic.pt")
             print("Building TensorRT-FP32 Model of YOLOv8\n")
             tgtmodel.export(format='engine', device=0, half=False)
             print("Building Complete\n")
