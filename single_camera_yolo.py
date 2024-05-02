@@ -12,6 +12,7 @@ import torchvision
 from ultralytics import YOLO
 import numpy as np
 import os
+import time
 
 """ 
 gstreamer_pipeline returns a GStreamer pipeline for capturing from the CSI camera
@@ -68,6 +69,18 @@ def gstreamer_pipeline(
 
 def show_camera(args, model, Object_classes, Object_colors):
     window_title = "CSI Camera"
+    video_directory = "/video"
+
+    if not os.path.exists(video_directory):
+        os.makedirs(video_directory)
+
+    # Video save
+    current_time = time.strftime("%H%M%S")
+    video_save = os.path.join(video_directory, f"{current_time}.mp4")
+    fps = 30
+    codec = cv2.VideoWriter_fourcc(*"mp4v")
+    video_writer = cv2.VideoWriter(video_save, codec, fps)
+
 
     # To flip the image, modify the flip_method parameter (0 and 2 are the most common)
     print(gstreamer_pipeline(flip_method=0))
@@ -95,6 +108,8 @@ def show_camera(args, model, Object_classes, Object_colors):
                             cv2.putText(frame, f"{cls_name} {score}", (x1,y1), cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 1, cv2.LINE_AA)
 
                     cv2.imshow(window_title, frame)
+
+                    video_writer.write(frame)
                 else:
                     break 
                 keyCode = cv2.waitKey(10) & 0xFF
@@ -103,6 +118,7 @@ def show_camera(args, model, Object_classes, Object_colors):
                     break
         finally:
             video_capture.release()
+            video_writer.release()
             cv2.destroyAllWindows()
     else:
         print("Error: Unable to open camera")
@@ -118,26 +134,6 @@ if __name__ == "__main__":
     if args.mode == 'Original':
         model = YOLO("Original/yolov8n_traffic.pt",  task='detect')
     
-    # elif args.mode == 'TensorRT-FP16':
-    #     file_path=("FP16")
-    #     file_list=os.listdir(file_path)
-    #     if not any(file.endswith('.engine') for file in file_list):
-    #         tgtmodel = YOLO("FP16/yolov8n_traffic.pt")
-    #         print("Building TensorRT-FP16 Model of YOLOv8\n")
-    #         tgtmodel.export(format='engine', device=0, half=True)
-    #         print("Building Complete\n")
-    #     model=YOLO("FP16/yolov8n.engine", task='detect')
-
-    # elif args.mode == 'TensorRT-FP32':
-    #     file_path=("FP32")
-    #     file_list=os.listdir(file_path)
-    #     if not any(file.endswith('.engine') for file in file_list):
-    #         tgtmodel = YOLO("FP32/yolov8n_traffic.pt")
-    #         print("Building TensorRT-FP32 Model of YOLOv8\n")
-    #         tgtmodel.export(format='engine', device=0, half=False)
-    #         print("Building Complete\n")
-    #     model=YOLO("FP32/yolov8n.engine", task='detect')
-
     else:
         print("Model Selection Error")
         raise AssertionError("Model Error: Please select model from 'Original', 'TensorRT-FP16', 'TensorRT-FP32'")
